@@ -1,9 +1,9 @@
-Faker==18.10.1
-numpy==1.21.6
-pandas==2.0.2
-plotly==5.14.1
-seaborn==0.12.2
-streamlit==1.23.1
-streamlit_echarts==0.4.0
-streamlit_option_menu==0.3.6
+Faker
+numpy
+pandas
+plotly
+seaborn
+streamlit
+streamlit_echarts
+streamlit_option_menu
 
