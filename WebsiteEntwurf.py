@@ -19,7 +19,7 @@ import pandas as pd
 import sqlite3
 import plotly.express as px
 import plotly.graph_objects as go
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 import time
 import random
 import datetime
@@ -47,11 +47,13 @@ def home_page():
 
     conn = sqlite3.connect(database_path)
 
+
     #conn = sqlite3.connect(r'C:\Users\Alex\Desktop\Business\Data Science Bots\Amazon Scraping Projekt\Schreib Vortrag\databaseV2.0.db')
 
     # Datenbank lesen
     df = pd.read_sql_query("SELECT * from price", conn)
-    
+
+       
     with tab1:
         
         #Anfang Balkendiagramm-----------------
@@ -124,6 +126,220 @@ def home_page():
 
         #Ende Balkendiagramm----------------------------------------------------------------
 
+        #Anfang Nutzerauswahl Kreisdiagramme
+        choice = st.radio(
+        "Choose a category",
+        ('Profilbild', 'Verifizierter Kauf', 'Bilder'),
+        key='genre2',
+        horizontal=True)
+        #Ende Nutzerauswahl Kreisdiagramme---------------
+        
+        
+        #Anfang 1. Kreisdiagramm Profilbild----------------------
+        
+        profile_image_counts = df['profile_image'].value_counts().tolist()
+        option_profile_image_counts = {
+            "title": {
+                "text": 'Verhältnis der vorhandenen Profilbilder',
+                "left": 'center',
+                "textStyle": {
+                    "color": '#FFFFFF'
+                }
+            },
+            "tooltip": {
+                "trigger": 'item',
+                "formatter": "{a} <br/>{b} : {c} ({d}%)"
+            },
+            "legend": {
+                "orient": 'vertical',
+                "left": 'left',
+                "textStyle": {
+                    "color": '#FFFFFF'
+                }
+            },
+            "series": [
+                {
+                    "name": 'Anzahl',
+                    "type": 'pie',
+                    "radius": '50%',
+                    "data": [
+                        {"value": profile_image_counts[0], "name": 'Ohne Profilbild'},
+                        {"value": profile_image_counts[1], "name": 'Mit Profilbild'}
+                    ],
+                    "emphasis": {
+                        "itemStyle": {
+                            "shadowBlur": 10,
+                            "shadowOffsetX": 0,
+                            "shadowColor": 'rgba(0, 0, 0, 0.5)'
+                        }
+                    },
+                    "label": {
+                        "show": True,
+                        "textStyle": {
+                                "color": '#FFFFFF'
+                            },
+                        "formatter": "{b}: {d}%"
+                    }
+                }
+            ]
+        }
+        #st_echarts(options=option_profile_image_counts, height="500px", key="unique_key_profile_image5")
+    
+         #Ende  1. Kreisdiagramm Profilbild----------------------
+
+
+        #Anfang 2. Kreisdiagramm verified_purchase----------------------
+        
+        verified_purchase_counts = df['verified_purchase'].value_counts(sort=False).tolist()
+        option_verified_purchase_counts = {
+            "title": {
+                "text": 'Verhältnis der verifizierten Käufe',
+                "left": 'center',
+                "textStyle": {
+                    "color": '#FFFFFF'
+                }
+            },
+            "tooltip": {
+                "trigger": 'item',
+                "formatter": "{a} <br/>{b} : {c} ({d}%)"
+            },
+            "legend": {
+                "orient": 'vertical',
+                "left": 'left',
+                "textStyle": {
+                    "color": '#FFFFFF'
+                }
+            },
+            "series": [
+                {
+                    "name": 'Anzahl',
+                    "type": 'pie',
+                    "radius": '50%',
+                    "data": [
+                        {"value": verified_purchase_counts[0], "name": 'Nicht verifiziert'},
+                        {"value": verified_purchase_counts[1], "name": 'Verifiziert'}
+                    ],
+                    "emphasis": {
+                        "itemStyle": {
+                            "shadowBlur": 10,
+                            "shadowOffsetX": 0,
+                            "shadowColor": 'rgba(0, 0, 0, 0.5)'
+                        }
+                    },
+                    "label": {
+                        "show": True,
+                        "textStyle": {
+                                "color": '#FFFFFF'
+                            },
+                        "formatter": "{b}: {d}%"
+                    }
+                }
+            ]
+        }
+        #st_echarts(options=option_verified_purchase_counts, height="500px", key="unique_verified_purchase5")
+        #Ende  2. Kreisdiagramm Verifizierte Kauf----------------------
+
+
+        #Anfang 3. Kreisdiagramm Bilder Videos----------------------
+
+        # Berechnen der Anzahl von Bewertungen mit und ohne Bilder oder Videos
+        df['image_or_video'] = ((df['picture_amount'] > 0) | (df['video_amount'] > 0)).astype(int)
+        image_video_counts = df['image_or_video'].value_counts().tolist()
+
+        option_image_video_counts = {
+            "title": {
+                "text": 'Verhältnis der Bewertungen mit Bildern oder Videos',
+                "left": 'center',
+                "textStyle": {
+                    "color": '#FFFFFF'
+                }
+            },
+            "tooltip": {
+                "trigger": 'item',
+                "formatter": "{a} <br/>{b} : {c} ({d}%)"
+            },
+            "legend": {
+                "orient": 'vertical',
+                "left": 'left',
+                "textStyle": {
+                    "color": '#FFFFFF'
+                }
+            },
+            "series": [
+                {
+                    "name": 'Anzahl',
+                    "type": 'pie',
+                    "radius": '50%',
+                    "data": [
+                        {"value": image_video_counts[0], "name": 'Ohne Bilder oder Videos'},
+                        {"value": image_video_counts[1], "name": 'Mit Bildern oder Videos'}
+                    ],
+                    "emphasis": {
+                        "itemStyle": {
+                            "shadowBlur": 10,
+                            "shadowOffsetX": 0,
+                            "shadowColor": 'rgba(0, 0, 0, 0.5)'
+                        }
+                    },
+                    "itemStyle": {
+                        "normal": {
+                            #"color": '#c23531',
+                            "shadowBlur": 200,
+                            "shadowColor": 'rgba(0, 0, 0, 0.5)'
+                        },
+                        "emphasis": {
+                            #"color": '#e06343'
+                        }
+                    },
+                    "label": {
+                        "normal": {
+                            "textStyle": {
+                                "color": '#FFFFFF'
+                            },
+                            "formatter": "{b}: {d}%"
+                        }
+                    },
+                    "labelLine": {
+                        "normal": {
+                            "lineStyle": {
+                                #"color": '#FFFFFF'
+                            },
+                            "smooth": 0.2,
+                            "length": 10,
+                            "length2": 20
+                        }
+                    },
+                }
+            ]
+        }
+        #st_echarts(options=option_image_video_counts, height="500px", key="unique_key_image_video1")
+
+        #Ende  3. Kreisdiagramm Bilder Videos----------------------
+
+        if choice == 'Profilbild':
+            st.write('Sie haben Komödie ausgewählt.')
+            st_echarts(options=option_profile_image_counts, height="500px", key="unique_key_profile_image6")
+
+        
+        elif choice == 'Verifizierter Kauf':
+            st.write('Sie haben Komödie2 ausgewählt.')
+            st_echarts(options=option_verified_purchase_counts, height="500px", key=f"unique_verified_purchase{time.time()}")
+
+        else:
+            st.write('Sie haben Komödie3 ausgewählt.')
+            st_echarts(options=option_image_video_counts, height="500px", key="unique_key_image_video1")
+
+        #1/4 Auswahl Frage Master Boxplot---------------------------------------------
+
+        visualisation = st.radio(
+            "Was soll visualisiert werden?",
+            ('Rating', 'Rezensionslänge', 'Nützlich-Stimmen'),
+            key='visualisation1',
+            horizontal=True)
+
+
+
+        #Ende 1/4 Auswahl Frage Master Boxplot---------------------------------------------
 
         #Anfang Boxplot -----------------------------------------------------------------------------------
 
@@ -152,223 +368,280 @@ def home_page():
             yaxis=dict(showticklabels=False, showgrid=False), # Keine Y-Achsenbeschriftung und kein Gitter
             showlegend=False, # Legende ausblenden
             hovermode="closest" # Hover nur über nächstem Punkt anzeigen
-        )
+        )    
 
-        # Diagramm anzeigen
-        st.plotly_chart(fig1)
+        #Ende Boxplot1 Ratings ------------------------------------------------------------
+
+        
+        
+        #Anfang Boxplot2 Rezensionslänge ------------------------------------------------------------
+
+        #Ende Boxplot2 Rezensionslänge ------------------------------------------------------------
 
 
-        #Ende Boxplot ------------------------------------------------------------
+
+
+        #Anfang Boxplot3 Nützlich Stimmen ----------------------
+
+        #Ende Boxplot3 Nützlich Stimmen ------------------------------------------------------------
+
+
+        #Anfang Master Auswahlmenü------------------------------------------------------------
+
+        if visualisation == 'Rating':
+            # Diagramm anzeigen
+            st.plotly_chart(fig1)
+            st.write('Sie haben Rating ausgewählt.')
+        elif visualisation == 'Rezensionslänge':
+
+            st.write('Sie haben Rezensionslänge ausgewählt.')
+        else:
+
+            st.write('Sie haben Nützlich-Stimmen ausgewählt.')
+        #Ende Master Auswahlmenü------------------------------------------------------------
+
+
+
+
+        #2/4 Auswahl Frage Histogramm---------------------------------------------
+        
+        if visualisation != 'Rating':
+            visualisation2 = st.radio(
+                "Was soll visualisiert werden? 2",
+                ('Rezensionslänge', 'Nützlich-Stimmen'),
+                key='visualisation2',
+                index=('Rezensionslänge', 'Nützlich-Stimmen').index(visualisation) if visualisation in ('Rezensionslänge', 'Nützlich-Stimmen') else 0,
+                horizontal=True)
+
+
+
+        #Ende 2/4 Auswahl Frage Master Histogramm---------------------------------------------
+
+
 
         #Anfang Histogramm------------------------------------------------------
 
        
-        review_length = df['review_text'].str.len()
-        max_length = review_length.max()
-        min_length = review_length.min()
+            review_length = df['review_text'].str.len()
+            max_length = review_length.max()
+            min_length = review_length.min()
 
-        bin_size = 50  # Anpassbare Größe der Bins
+            bin_size = 50  # Anpassbare Größe der Bins
 
-        num_bins = int(np.ceil((max_length - min_length) / bin_size))  # Anzahl der Bins berechnen
+            num_bins = int(np.ceil((max_length - min_length) / bin_size))  # Anzahl der Bins berechnen
 
-        review_length_bins = np.linspace(min_length, min_length + num_bins * bin_size, num_bins + 1).tolist()
-        review_length_hist, _ = np.histogram(review_length, bins=review_length_bins)
+            review_length_bins = np.linspace(min_length, min_length + num_bins * bin_size, num_bins + 1).tolist()
+            review_length_hist, _ = np.histogram(review_length, bins=review_length_bins)
+
+            
+
+            review_length_option = {
+                # Optionen bleiben unverändert
+                "tooltip": {
+                    "trigger": 'axis',
+                    "axisPointer": {
+                        "type": 'shadow',
+                        "label": {
+                            "show": True
+                        }
+                    }
+                },
+                "toolbox": {
+                    "show": True,
+                    "feature": {
+                        "mark": {"show": True},
+                        "dataView": {"show": True, "readOnly": False},
+                        "magicType": {"show": True, "type": ['line', 'bar']},
+                        "restore": {"show": True},
+                        "saveAsImage": {"show": True}
+                    }
+                },
+                "calculable": True,
+                "legend": {
+                    "data": ['Number of Reviews'],
+                    "itemGap": 5
+                },
+                "grid": {
+                    "top": '12%',
+                    "left": '1%',
+                    "right": '10%',
+                    "containLabel": True
+                },
+                "xAxis": [
+                    {
+                        "type": 'category',
+                        "data": [f'{int(bin_start)}-{int(bin_end)}' for bin_start, bin_end in zip(review_length_bins[:-1], review_length_bins[1:])]
+                    }
+                ],
+                "yAxis": [
+                    {
+                        "type": 'value',
+                        "name": 'Number of Reviews',
+                        "axisLabel": {
+                            "formatter": '{value}',
+                            "interval": 1 
+                        }
+                    }
+                ],
+                "dataZoom": [
+                    {
+                        "show": True,
+                        "start": 0,
+                        "end": 13
+                    },
+                    {
+                        "type": 'inside',
+                        "start": 0,
+                        "end": 13
+                    },
+                    {
+                        "show": True,
+                        "yAxisIndex": 0,
+                        "filterMode": 'empty',
+                        "width": 30,
+                        "height": '80%',
+                        "showDataShadow": False,
+                        "left": '93%'
+                    }
+                ],
+                "series": [
+                    {
+                        "name": 'Number of Reviews',
+                        "type": 'bar',
+                        "data": review_length_hist.tolist()
+                    }
+                ]
+            }
+
+            # Streamlit Befehl zum Anzeigen des Diagramms
+            #st_echarts(options=review_length_option, height="600px", key="unique_key10")
+
+
+            #Ende Histogramm-------------------------------------------------------
+
+            #Anfang Histogramm Helpful-------------------------------------------------------
+            # Daten erstellen
+            helpful_votes = df['helpful_votes'].values
+            max_votes = helpful_votes.max()
+            min_votes = helpful_votes.min()
+
+            bin_size = 50  # Anpassbare Größe der Bins
+
+            num_bins = int(np.ceil((max_votes - min_votes) / bin_size))  # Anzahl der Bins berechnen
+
+            votes_bins = np.linspace(min_votes, min_votes + num_bins * bin_size, num_bins + 1).tolist()
+            votes_hist, _ = np.histogram(helpful_votes, bins=votes_bins)
+
+            helpful_votes_option = {
+                "tooltip": {
+                    "trigger": 'axis',
+                    "axisPointer": {
+                        "type": 'shadow',
+                        "label": {
+                            "show": True
+                        }
+                    }
+                },
+                "toolbox": {
+                    "show": True,
+                    "feature": {
+                        "mark": {"show": True},
+                        "dataView": {"show": True, "readOnly": False},
+                        "magicType": {"show": True, "type": ['line', 'bar']},
+                        "restore": {"show": True},
+                        "saveAsImage": {"show": True}
+                    }
+                },
+                "calculable": True,
+                "legend": {
+                    "data": ['Number of Helpful Amount'],
+                    "itemGap": 5
+                },
+                "grid": {
+                    "top": '12%',
+                    "left": '1%',
+                    "right": '10%',
+                    "containLabel": True
+                },
+                "xAxis": [
+                    {
+                        "type": 'category',
+                        "data": [f'{int(bin_start)}-{int(bin_end)}' for bin_start, bin_end in zip(votes_bins[:-1], votes_bins[1:])]
+                    }
+                ],
+                "yAxis": [
+                    {
+                        "type": 'value',
+                        "name": 'Number of Reviews',
+                        "axisLabel": {
+                            "formatter": '{value}',
+                            "interval": 1 
+                        }
+                    }
+                ],
+                "dataZoom": [
+                    {
+                        "show": True,
+                        "start": 0,
+                        "end": 13
+                    },
+                    {
+                        "type": 'inside',
+                        "start": 0,
+                        "end": 13
+                    },
+                    {
+                        "show": True,
+                        "yAxisIndex": 0,
+                        "filterMode": 'empty',
+                        "width": 30,
+                        "height": '80%',
+                        "showDataShadow": False,
+                        "left": '93%'
+                    }
+                ],
+                "series": [
+                    {
+                        "name": 'Number of Reviews',
+                        "type": 'bar',
+                        "data": votes_hist.tolist()
+                    }
+                ]
+            }
+
+            # Streamlit Befehl zum Anzeigen des Diagramms
+            #st_echarts(options=helpful_votes_option, height="600px", key="unique_key11")
+
+            #Ende Histogramm Helpful-------------------------------------------------------
+
+
+        #Anfang Antwort Histogramm------------------------------------------------------------
+
+
+            if visualisation2 == 'Rezensionslänge':
+                st.write('Sie haben Rezensionslänge ausgewählt.')
+                
+                # Diagramm für Review-Länge anzeigen
+                st_echarts(options=review_length_option, height="600px", key="unique_key_review_length")
+            else:
+                st.write('Sie haben Nützlich-Stimmen ausgewählt.')
+                st_echarts(options=helpful_votes_option, height="600px", key="unique_key_helpful_votes")
+
+        #Ende Antwort Histogramm------------------------------------------------------------
+
+
+        #Anfang 3/4 Auswahl Frage nach Gruppen---------------------------------------------
+        visualisation3 = st.radio(
+        "Was soll visualisiert werden? 3",
+        ('Rating', 'Rezensionslänge', 'Nützlich-Stimmen'),
+        key='visualisation3',
+        index=('Rating', 'Rezensionslänge', 'Nützlich-Stimmen').index(visualisation) if visualisation in ('Rating', 'Rezensionslänge', 'Nützlich-Stimmen',) else 0,
+        horizontal=True)
+        #Ende 3/4 Auswahl Frage nach Gruppen---------------------------------------------
 
         
-
-        review_length_option = {
-            # Optionen bleiben unverändert
-            "tooltip": {
-                "trigger": 'axis',
-                "axisPointer": {
-                    "type": 'shadow',
-                    "label": {
-                        "show": True
-                    }
-                }
-            },
-            "toolbox": {
-                "show": True,
-                "feature": {
-                    "mark": {"show": True},
-                    "dataView": {"show": True, "readOnly": False},
-                    "magicType": {"show": True, "type": ['line', 'bar']},
-                    "restore": {"show": True},
-                    "saveAsImage": {"show": True}
-                }
-            },
-            "calculable": True,
-            "legend": {
-                "data": ['Number of Reviews'],
-                "itemGap": 5
-            },
-            "grid": {
-                "top": '12%',
-                "left": '1%',
-                "right": '10%',
-                "containLabel": True
-            },
-            "xAxis": [
-                {
-                    "type": 'category',
-                    "data": [f'{int(bin_start)}-{int(bin_end)}' for bin_start, bin_end in zip(review_length_bins[:-1], review_length_bins[1:])]
-                }
-            ],
-            "yAxis": [
-                {
-                    "type": 'value',
-                    "name": 'Number of Reviews',
-                    "axisLabel": {
-                        "formatter": '{value}',
-                        "interval": 1 
-                    }
-                }
-            ],
-            "dataZoom": [
-                {
-                    "show": True,
-                    "start": 0,
-                    "end": 13
-                },
-                {
-                    "type": 'inside',
-                    "start": 0,
-                    "end": 13
-                },
-                {
-                    "show": True,
-                    "yAxisIndex": 0,
-                    "filterMode": 'empty',
-                    "width": 30,
-                    "height": '80%',
-                    "showDataShadow": False,
-                    "left": '93%'
-                }
-            ],
-            "series": [
-                {
-                    "name": 'Number of Reviews',
-                    "type": 'bar',
-                    "data": review_length_hist.tolist()
-                }
-            ]
-        }
-
-        # Streamlit Befehl zum Anzeigen des Diagramms
-        st_echarts(options=review_length_option, height="600px", key="unique_key10")
-
-
-        #Ende Histogramm-------------------------------------------------------
-
-        #Anfang Histogramm Helpful-------------------------------------------------------
-        # Daten erstellen
-        helpful_votes = df['helpful_votes'].values
-        max_votes = helpful_votes.max()
-        min_votes = helpful_votes.min()
-
-        bin_size = 50  # Anpassbare Größe der Bins
-
-        num_bins = int(np.ceil((max_votes - min_votes) / bin_size))  # Anzahl der Bins berechnen
-
-        votes_bins = np.linspace(min_votes, min_votes + num_bins * bin_size, num_bins + 1).tolist()
-        votes_hist, _ = np.histogram(helpful_votes, bins=votes_bins)
-
-        helpful_votes_option = {
-            "tooltip": {
-                "trigger": 'axis',
-                "axisPointer": {
-                    "type": 'shadow',
-                    "label": {
-                        "show": True
-                    }
-                }
-            },
-            "toolbox": {
-                "show": True,
-                "feature": {
-                    "mark": {"show": True},
-                    "dataView": {"show": True, "readOnly": False},
-                    "magicType": {"show": True, "type": ['line', 'bar']},
-                    "restore": {"show": True},
-                    "saveAsImage": {"show": True}
-                }
-            },
-            "calculable": True,
-            "legend": {
-                "data": ['Number of Helpful Amount'],
-                "itemGap": 5
-            },
-            "grid": {
-                "top": '12%',
-                "left": '1%',
-                "right": '10%',
-                "containLabel": True
-            },
-            "xAxis": [
-                {
-                    "type": 'category',
-                    "data": [f'{int(bin_start)}-{int(bin_end)}' for bin_start, bin_end in zip(votes_bins[:-1], votes_bins[1:])]
-                }
-            ],
-            "yAxis": [
-                {
-                    "type": 'value',
-                    "name": 'Number of Reviews',
-                    "axisLabel": {
-                        "formatter": '{value}',
-                        "interval": 1 
-                    }
-                }
-            ],
-            "dataZoom": [
-                {
-                    "show": True,
-                    "start": 0,
-                    "end": 13
-                },
-                {
-                    "type": 'inside',
-                    "start": 0,
-                    "end": 13
-                },
-                {
-                    "show": True,
-                    "yAxisIndex": 0,
-                    "filterMode": 'empty',
-                    "width": 30,
-                    "height": '80%',
-                    "showDataShadow": False,
-                    "left": '93%'
-                }
-            ],
-            "series": [
-                {
-                    "name": 'Number of Reviews',
-                    "type": 'bar',
-                    "data": votes_hist.tolist()
-                }
-            ]
-        }
-
-        # Streamlit Befehl zum Anzeigen des Diagramms
-        st_echarts(options=helpful_votes_option, height="600px", key="unique_key11")
-
-        #Ende Histogramm Helpful-------------------------------------------------------
-
-
-        #Anfang Auswahl Histogramm-------------------------------------------------------
-        # Nutzerauswahl erhalten
-        selection = st.radio("Select Data to Visualize", ('Review Length', 'Helpful Votes'))
-
-        if selection == 'Review Length':
-            # Diagramm für Review-Länge anzeigen
-            st_echarts(options=review_length_option, height="600px", key="unique_key_review_length")
-        elif selection == 'Helpful Votes':
-            # Diagramm für Helpful Votes anzeigen
-            st_echarts(options=helpful_votes_option, height="600px", key="unique_key_helpful_votes")
-
-        #Ende Auswahl Histogramm-------------------------------------------------------
-
+        
+        
         #----- neuer Anfang
 
         # Diagrammkonfiguration
@@ -494,12 +767,12 @@ def home_page():
         }
 
         # Zeichnen des Diagramms
-        st_echarts(options=helpful_votes_option2, height="500px", key="unique_key67")
+        #st_echarts(options=helpful_votes_option2, height="500px", key="unique_key67")
 
 
         #--Ende Diagramm für nürtlich Stimmen
 
-        #Anfang für Rating
+        #Anfang für Rating-----------------------------
 
         # Berechnung der Werte
         df['image_or_video'] = ((df['picture_amount'] > 0) | (df['video_amount'] > 0)).astype(int)
@@ -623,9 +896,9 @@ def home_page():
         }
 
         # Zeichnen des Diagramms
-        st_echarts(options=rating_option2, height="500px", key="unique_key68")
+        #st_echarts(options=rating_option2, height="500px", key="unique_key68")
 
-        #--Ende Diagramm für Rating 
+        #--Ende Diagramm für Rating ..................................
 
         #Anfang Diagramm für Review Length------------------------------------------------
 
@@ -753,384 +1026,330 @@ def home_page():
         }
 
         # Zeichnen des Diagramms
-        st_echarts(options=review_length_option2, height="500px", key="unique_key70")
+        #st_echarts(options=review_length_option2, height="500px", key="unique_key70")
 
         #Ende Diagramm für Review Length------------------------------------------------
 
         # Nutzerauswahl erhalten-----------------------------------------------------------------------
-        selection = st.radio("Select Data to Visualize", ('Review Length', 'Helpful Votes', 'Rating'))
+            
+        
 
-        if selection == 'Review Length':
-            # Diagramm für Review-Länge anzeigen
-            st_echarts(options=review_length_option2, height="600px", key="unique_key_review_length2")
-        elif selection == 'Helpful Votes':
-            # Diagramm für Helpful Votes anzeigen
-            st_echarts(options=helpful_votes_option2, height="600px", key="unique_key_helpful_votes2")
-        elif selection == 'Rating':
-            # Diagramm für Helpful Votes anzeigen
+
+        if visualisation3 == 'Rating':
+            st.write('Sie haben Rating ausgewählt.')
             st_echarts(options=rating_option2, height="600px", key="unique_key_rating")
+            
+        elif visualisation3 == 'Rezensionslänge':
+            st.write('Sie haben Rezensionslänge ausgewählt.')
+            st_echarts(options=review_length_option2, height="600px", key="unique_key_review_length2")
+            
+        else:
+            st.write('Sie haben Nützlich-Stimmen ausgewählt.')
+            st_echarts(options=helpful_votes_option2, height="600px", key="unique_key_helpful_votes2")
         # Ende Nutzerauswahl erhalten-----------------------------------------------------------------------
 
-        # Anfang Balekndiagramm Review Länge-----------------------------------------------------------------------
-        # Verarbeitung der Daten
-        df['review_length'] = df['review_text'].apply(len)
-        average_review_length = df.groupby('rating')['review_length'].mean()
-
-        # Runden der Werte auf 2 Nachkommastellen
-        average_review_length = average_review_length.round(2)
-
-        # Umwandlung des Series-Objekts in eine Liste
-        average_review_length_values = average_review_length.values.tolist()
-
-        # Umwandlung des Index (Rating) in eine Liste
-        rating_values = average_review_length.index.tolist()
 
 
-        option = {
-        "title": {
-            "text": 'Durchschnittliche Rezensionslänge nach Rating',
-            "left": 'center',
-            "top": 20,
-            "textStyle": {
-            "color": '#fff'
-            }
-        },
-        "tooltip": {
-            "trigger": 'axis',
-            "axisPointer": {
-            "type": 'shadow'
-            }
-        },
-        "grid": {
-            "left": '3%',
-            "right": '4%',
-            "bottom": '3%',
-            "containLabel": True
-        },
-        "xAxis": [
-            {
-            "type": 'category',
-            "data": rating_values,
-            "axisTick": {
-                "alignWithLabel": True
+        #Anfang 4/4 Auswahl Frage nach Rating---------------------------------------------
+
+        if visualisation != 'Rating':
+            visualisation4 = st.radio(
+                "Was soll visualisiert werden? 4",
+                ('Rezensionslänge', 'Nützlich-Stimmen'),
+                key='visualisation4',
+                index=('Rezensionslänge', 'Nützlich-Stimmen').index(visualisation) if visualisation in ('Rezensionslänge', 'Nützlich-Stimmen') else 0,
+                horizontal=True)
+
+        #Ende 4/4 Auswahl Frage nach Rating---------------------------------------------
+
+
+            # Anfang Balekndiagramm Review Länge-----------------------------------------------------------------------
+            # Verarbeitung der Daten
+            df['review_length'] = df['review_text'].apply(len)
+            average_review_length = df.groupby('rating')['review_length'].mean()
+
+            # Runden der Werte auf 2 Nachkommastellen
+            average_review_length = average_review_length.round(2)
+
+            # Umwandlung des Series-Objekts in eine Liste
+            average_review_length_values = average_review_length.values.tolist()
+
+            # Umwandlung des Index (Rating) in eine Liste
+            rating_values = average_review_length.index.tolist()
+
+
+            option = {
+            "title": {
+                "text": 'Durchschnittliche Rezensionslänge nach Rating',
+                "left": 'center',
+                "top": 20,
+                "textStyle": {
+                "color": '#fff'
+                }
             },
-            "axisLabel": {
-                "color": '#fff'
-            }
-            }
-        ],
-        "yAxis": [
-            {
-            "type": 'value',
-            "name": 'Durchschnittliche Rezensionslänge',
-            "axisLabel": {
-                "color": '#fff'
-            }
-            }
-        ],
-        "series": [
-            {
-            "name": 'Durchschnittliche Rezensionslänge',
-            "type": 'bar',
-            "barWidth": '60%',
-            "data": average_review_length_values,
-            "label": {
-                "show": True,
-                "position": 'top',
-                "color": '#fff'
-            }
-            }
-        ]
-        }
-
-        st_echarts(options=option, height="600px", key="unique_key_rating71")
-
-        # Ende Balekndiagramm Review Länge-----------------------------------------------------------------------
-
-        # Anfang Balekndiagramm Nützlich Stimmen-----------------------------------------------------------------------
-
-        # Verarbeitung der Daten 
-        average_helpful_votes = df.groupby('rating')['helpful_votes'].mean().astype(float)
-
-        # Runden der Werte auf 2 Nachkommastellen
-        average_helpful_votes = average_helpful_votes.round(2)
-
-        # Umwandlung des Series-Objekts in eine Liste
-        average_helpful_votes_values = average_helpful_votes.values.tolist()
-
-        # Umwandlung des Index (Rating) in eine Liste
-        rating_values = [float(x) for x in average_helpful_votes.index.tolist()]
-
-        option2 = {
-        "tooltip": {
-            "trigger": 'axis',
-            "axisPointer": {
-            "type": 'shadow'
-            }
-        },
-        "grid": {
-            "left": '3%',
-            "right": '4%',
-            "bottom": '3%',
-            "containLabel": True
-        },
-        "xAxis": [
-            {
-            "type": 'category',
-            "data": rating_values,
-            "axisTick": {
-                "alignWithLabel": True
+            "tooltip": {
+                "trigger": 'axis',
+                "axisPointer": {
+                "type": 'shadow'
+                }
             },
-            "axisLabel": {
-                "color": '#fff',
+            "grid": {
+                "left": '3%',
+                "right": '4%',
+                "bottom": '3%',
+                "containLabel": True
+            },
+            "xAxis": [
+                {
+                "type": 'category',
+                "data": rating_values,
+                "axisTick": {
+                    "alignWithLabel": True
+                },
+                "axisLabel": {
+                    "color": '#fff'
+                }
+                }
+            ],
+            "yAxis": [
+                {
+                "type": 'value',
+                "name": 'Durchschnittliche Rezensionslänge',
+                "axisLabel": {
+                    "color": '#fff'
+                }
+                }
+            ],
+            "series": [
+                {
+                "name": 'Durchschnittliche Rezensionslänge',
+                "type": 'bar',
+                "barWidth": '60%',
+                "data": average_review_length_values,
+                "label": {
+                    "show": True,
+                    "position": 'top',
+                    "color": '#fff'
+                }
+                }
+            ]
             }
-            }
-        ],
-        "yAxis": [
-            {
-            "type": 'value',
-            "axisLabel": {
-                "color": '#fff'
-            }
-            }
-        ],
-        "series": [
-            {
-            "name": 'Durchschnittliche Anzahl von "Nützlich"-Stimmen',
-            "type": 'bar',
-            "barWidth": '60%',
-            "data": average_helpful_votes_values,
-            "label": {
-                "show": True,
-                "position": 'top',
-                "color": '#fff'
-            }
-            }
-        ]
-        }
 
-        st_echarts(options=option2, height="600px", key="unique_key_helpful_votes4")
+            #st_echarts(options=option, height="600px", key="unique_key_rating71")
 
-        # Ende Balekndiagramm Nützlich Stimmen-----------------------------------------------------------------------
+            # Ende Balekndiagramm Review Länge-----------------------------------------------------------------------
+
+            # Anfang Balekndiagramm Nützlich Stimmen-----------------------------------------------------------------------
+
+            # Verarbeitung der Daten 
+            average_helpful_votes = df.groupby('rating')['helpful_votes'].mean().astype(float)
+
+            # Runden der Werte auf 2 Nachkommastellen
+            average_helpful_votes = average_helpful_votes.round(2)
+
+            # Umwandlung des Series-Objekts in eine Liste
+            average_helpful_votes_values = average_helpful_votes.values.tolist()
+
+            # Umwandlung des Index (Rating) in eine Liste
+            rating_values = [float(x) for x in average_helpful_votes.index.tolist()]
+
+            option2 = {
+            "tooltip": {
+                "trigger": 'axis',
+                "axisPointer": {
+                "type": 'shadow'
+                }
+            },
+            "grid": {
+                "left": '3%',
+                "right": '4%',
+                "bottom": '3%',
+                "containLabel": True
+            },
+            "xAxis": [
+                {
+                "type": 'category',
+                "data": rating_values,
+                "axisTick": {
+                    "alignWithLabel": True
+                },
+                "axisLabel": {
+                    "color": '#fff',
+                }
+                }
+            ],
+            "yAxis": [
+                {
+                "type": 'value',
+                "axisLabel": {
+                    "color": '#fff'
+                }
+                }
+            ],
+            "series": [
+                {
+                "name": 'Durchschnittliche Anzahl von "Nützlich"-Stimmen',
+                "type": 'bar',
+                "barWidth": '60%',
+                "data": average_helpful_votes_values,
+                "label": {
+                    "show": True,
+                    "position": 'top',
+                    "color": '#fff'
+                }
+                }
+            ]
+            }
+
+            #st_echarts(options=option2, height="600px", key="unique_key_helpful_votes4")
+
+            # Ende Balekndiagramm Nützlich Stimmen-----------------------------------------------------------------------
+
+            if visualisation4 == 'Rezensionslänge':
+                st.write('Sie haben Rezensionslänge ausgewählt.')
+                st_echarts(options=option, height="600px", key="unique_key_rating71")
+            else:
+                st.write('Sie haben Nützlich-Stimmen ausgewählt.')
+                st_echarts(options=option2, height="600px", key="unique_key_helpful_votes4")
+
+
+
+
 
 
         # Ende Basis Diagramme-----------------------------------------------------------------------
 
 
-        #Auswahl für Kreisdiagramme----------------------
 
-        choice = st.radio(
-        "Choose a category",
-        ('Profilbild', 'Verifizierter Kauf', 'Bilder'),
-        key='genre2',
-        horizontal=True)
+
+
 
         
 
-        #Ende Auswahl für Kreisdiagramme----------------------
+        #Anfang besserer Scatterplot-----------------------------
+
+        #Datemaufbereitung
+
+        if df['date_created'].dtype != 'datetime64[ns]':
+            df['date_created'] = pd.to_datetime(df['date_created'], errors='coerce')
+
+        # Konvertieren Sie das 'date_created' Attribut in eine Zeichenkette im ISO-Format
+        df['date_created_str'] = df['date_created'].dt.strftime('%Y-%m-%d')
+
+        df_verified = df[df['verified_purchase'] == True]
+        df_unverified = df[df['verified_purchase'] == False]
+
+        # Erzeugen Sie die Datenlisten
+        data_verified = df_verified[['id', 'date_created_str']].values.tolist()
+        data_unverified = df_unverified[['id', 'date_created_str']].values.tolist()
 
 
-        #Anfang 1. Kreisdiagramm Profilbild----------------------
-        
-        profile_image_counts = df['profile_image'].value_counts().tolist()
-        option_profile_image_counts = {
+     
+
+        optiondata = {
             "title": {
-                "text": 'Verhältnis der vorhandenen Profilbilder',
-                "left": 'center',
+                "text": 'Ranking ID über Zeit',
                 "textStyle": {
-                    "color": '#FFFFFF'
+                    "color": "white"
                 }
-            },
-            "tooltip": {
-                "trigger": 'item',
-                "formatter": "{a} <br/>{b} : {c} ({d}%)"
             },
             "legend": {
-                "orient": 'vertical',
-                "left": 'left',
-                "textStyle": {
-                    "color": '#FFFFFF'
-                }
+                "data": ['Verifiziert', 'Nicht verifiziert'],
+                "left": 'center',
+                "bottom": 10
             },
-            "series": [
-                {
-                    "name": 'Anzahl',
-                    "type": 'pie',
-                    "radius": '50%',
-                    "data": [
-                        {"value": profile_image_counts[0], "name": 'Mit Profilbild'},
-                        {"value": profile_image_counts[1], "name": 'Ohne Profilbild'}
-                    ],
-                    "emphasis": {
-                        "itemStyle": {
-                            "shadowBlur": 10,
-                            "shadowOffsetX": 0,
-                            "shadowColor": 'rgba(0, 0, 0, 0.5)'
-                        }
-                    },
-                    "label": {
-                        "show": True,
-                        "textStyle": {
-                                "color": '#FFFFFF'
-                            },
-                        "formatter": "{b}: {d}%"
+
+            "grid": {
+                "left": '3%',
+                "right": '7%',
+                "bottom": '7%',
+                "containLabel": True
+            },
+            "tooltip": {
+                "showDelay": 0,
+                "axisPointer": {
+                    "show": True,
+                    "type": 'cross',
+                    "lineStyle": {
+                        "type": 'dashed',
+                        "width": 1
                     }
                 }
-            ]
-        }
-        #st_echarts(options=option_profile_image_counts, height="500px", key="unique_key_profile_image5")
-    
-         #Ende  1. Kreisdiagramm Profilbild----------------------
-
-
-        #Anfang 2. Kreisdiagramm verified_purchase----------------------
-        
-        verified_purchase_counts = df['verified_purchase'].value_counts().tolist()
-        option_verified_purchase_counts = {
-            "title": {
-                "text": 'Verhältnis der verifizierten Käufe',
-                "left": 'center',
-                "textStyle": {
-                    "color": '#FFFFFF'
-                }
             },
-            "tooltip": {
-                "trigger": 'item',
-                "formatter": "{a} <br/>{b} : {c} ({d}%)"
-            },
-            "legend": {
-                "orient": 'vertical',
-                "left": 'left',
-                "textStyle": {
-                    "color": '#FFFFFF'
-                }
-            },
-            "series": [
-                {
-                    "name": 'Anzahl',
-                    "type": 'pie',
-                    "radius": '50%',
-                    "data": [
-                        {"value": verified_purchase_counts[0], "name": 'Nicht verifiziert'},
-                        {"value": verified_purchase_counts[1], "name": 'Verifiziert'}
-                    ],
-                    "emphasis": {
-                        "itemStyle": {
-                            "shadowBlur": 10,
-                            "shadowOffsetX": 0,
-                            "shadowColor": 'rgba(0, 0, 0, 0.5)'
-                        }
-                    },
-                    "label": {
-                        "show": True,
-                        "textStyle": {
-                                "color": '#FFFFFF'
-                            },
-                        "formatter": "{b}: {d}%"
+            "toolbox": {
+                "feature": {
+                    "dataZoom": {},
+                    "brush": {
+                        "type": ['rect', 'polygon', 'clear']
                     }
                 }
-            ]
-        }
-        #st_echarts(options=option_verified_purchase_counts, height="500px", key="unique_verified_purchase5")
-        #Ende  2. Kreisdiagramm Verifizierte Kauf----------------------
-
-
-        #Anfang 3. Kreisdiagramm Bilder Videos----------------------
-
-        # Berechnen der Anzahl von Bewertungen mit und ohne Bilder oder Videos
-        image_video_counts = df['image_or_video'].value_counts().tolist()
-
-        option_image_video_counts = {
-            "title": {
-                "text": 'Verhältnis der Bewertungen mit Bildern oder Videos',
-                "left": 'center',
-                "textStyle": {
-                    "color": '#FFFFFF'
+            },
+            "brush": {},
+            "xAxis": [
+                {
+                    "type": 'value',  # This will be the 'id'
+                    "scale": True,
+                    "axisLabel": {
+                        "formatter": 'ID: {value}',
+                        "color": "white"  # This changes the color of the axis labels to white
+                    },
+                    "splitLine": {
+                        "show": False
+                    }
                 }
-            },
-            "tooltip": {
-                "trigger": 'item',
-                "formatter": "{a} <br/>{b} : {c} ({d}%)"
-            },
-            "legend": {
-                "orient": 'vertical',
-                "left": 'left',
-                "textStyle": {
-                    "color": '#FFFFFF'
+            ],
+            "yAxis": [
+                {
+                    "type": 'time',  # This will be the 'date_created_str'
+                    "scale": True,
+                    "axisLabel": {
+                        "color": "white"  # This changes the color of the axis labels to white
+                    },
+                    "splitLine": {
+                        "show": False
+                    }
                 }
-            },
+            ],
             "series": [
                 {
-                    "name": 'Anzahl',
-                    "type": 'pie',
-                    "radius": '50%',
-                    "data": [
-                        {"value": image_video_counts[0], "name": 'Mit Bildern oder Videos'},
-                        {"value": image_video_counts[1], "name": 'Ohne Bilder oder Videos'}
-                    ],
+                    "name": "Verifiziert",
+                    "type": "scatter",
                     "emphasis": {
-                        "itemStyle": {
-                            "shadowBlur": 10,
-                            "shadowOffsetX": 0,
-                            "shadowColor": 'rgba(0, 0, 0, 0.5)'
-                        }
+                        "focus": "series"
                     },
-                    "itemStyle": {
-                        "normal": {
-                            #"color": '#c23531',
-                            "shadowBlur": 200,
-                            "shadowColor": 'rgba(0, 0, 0, 0.5)'
-                        },
-                        "emphasis": {
-                            #"color": '#e06343'
-                        }
+                    "data": data_verified,
+                    # Optional, Sie können markArea, markPoint und markLine auskommentieren, wenn Sie diese nicht benötigen
+                },
+                {
+                    "name": "Nicht verifiziert",
+                    "type": "scatter",
+                    "emphasis": {
+                        "focus": "series"
                     },
-                    "label": {
-                        "normal": {
-                            "textStyle": {
-                                "color": '#FFFFFF'
-                            },
-                            "formatter": "{b}: {d}%"
-                        }
-                    },
-                    "labelLine": {
-                        "normal": {
-                            "lineStyle": {
-                                #"color": '#FFFFFF'
-                            },
-                            "smooth": 0.2,
-                            "length": 10,
-                            "length2": 20
-                        }
-                    },
+                    "data": data_unverified,
+                    # Optional, Sie können markArea, markPoint und markLine auskommentieren, wenn Sie diese nicht benötigen
                 }
             ]
         }
-        #st_echarts(options=option_image_video_counts, height="500px", key="unique_key_image_video1")
 
-        #Ende  3. Kreisdiagramm Bilder Videos----------------------
+        st_echarts(options=optiondata, height="500px", key="unique_key8")
 
-
-        if choice == 'Profilbild':
-            st.write('Sie haben Komödie ausgewählt.')
-            st_echarts(options=option_profile_image_counts, height="500px", key="unique_key_profile_image6")
-
-        
-        elif choice == 'Verifizierter Kauf':
-            st.write('Sie haben Komödie2 ausgewählt.')
-            st_echarts(options=option_verified_purchase_counts, height="500px", key=f"unique_verified_purchase{time.time()}")
-
-        else:
-            st.write('Sie haben Komödie3 ausgewählt.')
-            st_echarts(options=option_image_video_counts, height="500px", key="unique_key_image_video1")
-
-        #Ende Auswahlbereich-----------------------------------------------------------------
+        #Ende guter Scatterplot--------------------
 
 
-        #Anfang Linien Plot Anzahl der Rezensionen im Zeitverlauf not working atm------------------------------------------------
+
+
+        #Anfang Linien Plot Anzahl der Rezensionen im Zeitverlauf not working atm macht irgendwas falsch deswegen am ende------------------------------------------------
 
         # Lese die CSV-Datei ein
-        data = pd.read_csv(r'C:\Users\Alex\Desktop\Business\Data Science Bots\Amazon Scraping Projekt\Schreib Vortrag\bsr.csv')
+        current_directory = os.getcwd()
+        csv_filename = 'bsr.csv'
+        csv_path = os.path.join(current_directory, csv_filename)
+
+        data = pd.read_csv(csv_path)
+
+
+        #data = pd.read_csv(r'C:\Users\Alex\Desktop\Business\Data Science Bots\Amazon Scraping Projekt\Schreib Vortrag\bsr.csv')
 
         # Konvertiere die 'Time'-Spalte in ein datetime-Objekt
         data['Time'] = pd.to_datetime(data['Time'], format='%d.%m.%Y, %H:%M:%S')
@@ -1142,7 +1361,7 @@ def home_page():
         data.set_index('Time', inplace=True)
 
         # Berechne die Zeiträume, in denen der Bestsellerrang über 1000 war
-        data['unavailable'] = data['Sales Rank'] > 600
+        data['unavailable'] = data['Sales Rank'] > 400
         unavailability_periods = []
         start = None
         for i in range(len(data)):
@@ -1218,174 +1437,7 @@ def home_page():
 
 
         #Ende Linien Plot Anzahl der Rezensionen im Zeitverlauf not working atm------------------------------------------------
-
-        #Anfang Scatterplot-----------------------------
-
-        option = {
-            "title": {
-                "text": 'Male and female height and weight distribution',
-                "subtext": 'Data from: Heinz 2003'
-            },
-            "grid": {
-                "left": '3%',
-                "right": '7%',
-                "bottom": '7%',
-                "containLabel": True
-            },
-            "tooltip": {
-                "showDelay": 0,
-                "axisPointer": {
-                "show": True,
-                "type": 'cross',
-                "lineStyle": {
-                    "type": 'dashed',
-                    "width": 1
-                }
-                }
-            },
-            "toolbox": {
-                "feature": {
-                "dataZoom": {},
-                "brush": {
-                    "type": ['rect', 'polygon', 'clear']
-                }
-                }
-            },
-            "brush": {},
-            "legend": {
-                "data": ['Female', 'Male'],
-                "left": 'center',
-                "bottom": 10
-            },
-            "xAxis": [
-                {
-                "type": 'value',
-                "scale": True,
-                "axisLabel": {
-                    "formatter": '{value} cm'
-                },
-                "splitLine": {
-                    "show": False
-                }
-                }
-            ],
-            "yAxis": [
-                {
-                "type": 'value',
-                "scale": True,
-                "axisLabel": {
-                    "formatter": '{value} kg'
-                },
-                "splitLine": {
-                    "show": False
-                }
-                }
-            ],
-                "series": [
-                {
-                    "name": "Female",
-                    "type": "scatter",
-                    "emphasis": {
-                        "focus": "series"
-                    },
-                    "data": [[161.2, 51.6], [167.5, 59.0], [159.5, 49.2], [157.0, 63.0], [155.8, 53.6]],
-                    "markArea": {
-                        "silent": True,
-                        "itemStyle": {
-                            "color": "transparent",
-                            "borderWidth": 1,
-                            "borderType": "dashed"
-                        },
-                        "data": [
-                            [
-                                {
-                                    "name": "Female Data Range",
-                                    "xAxis": "min",
-                                    "yAxis": "min"
-                                },
-                                {
-                                    "xAxis": "max",
-                                    "yAxis": "max"
-                                }
-                            ]
-                        ]
-                    },
-                    "markPoint": {
-                        "data": [
-                            {"type": "max", "name": "Max"},
-                            {"type": "min", "name": "Min"}
-                        ]
-                    },
-                    "markLine": {
-                        "lineStyle": {
-                            "type": "solid"
-                        },
-                        "data": [{"type": "average", "name": "Average"}, {"xAxis": 160}]
-                    }
-                },
-                {
-                    "name": "Male",
-                    "type": "scatter",
-                    "emphasis": {
-                        "focus": "series"
-                    },
-                    "data": [[174.0, 65.6], [175.3, 71.8], [193.5, 80.7],[181.5, 74.8], [184.0, 86.4], [184.5, 78.4], [175.0, 62.0], [184.0, 81.6],
-                        [180.0, 76.6], [177.8, 83.6], [192.0, 90.0], [176.0, 74.6], [174.0, 71.0],
-                        [184.0, 79.6], [192.7, 93.8], [171.5, 70.0], [173.0, 72.4], [176.0, 85.9],
-                        [176.0, 78.8], [180.5, 77.8], [172.7, 66.2], [176.0, 86.4], [173.5, 81.8],
-                        [178.0, 89.6], [180.3, 82.8], [180.3, 76.4], [164.5, 63.2], [173.0, 60.9],
-                        [183.5, 74.8], [175.5, 70.0], [188.0, 72.4], [189.2, 84.1], [172.8, 69.1],
-                        [170.0, 59.5], [182.0, 67.2], [170.0, 61.3], [177.8, 68.6], [184.2, 80.1],
-                        [186.7, 87.8], [171.4, 84.7], [172.7, 73.4], [175.3, 72.1], [180.3, 82.6],
-                        [182.9, 88.7], [188.0, 84.1], [177.2, 94.1], [172.1, 74.9], [167.0, 59.1],
-                        [169.5, 75.6], [174.0, 86.2], [172.7, 75.3], [182.2, 87.1], [164.1, 55.2],
-                        [163.0, 57.0], [171.5, 61.4], [184.2, 76.8], [174.0, 86.8], [174.0, 72.2],
-                        [177.0, 71.6], [186.0, 84.8], [167.0, 68.2], [171.8, 66.1], [182.0, 72.0],
-                        [167.0, 64.6], [177.8, 74.8], [164.5, 70.0], [192.0, 101.6], [175.5, 63.2],
-                        [171.2, 79.1], [181.6, 78.9], [167.4, 67.7], [181.1, 66.0], [177.0, 68.2],
-                        [174.5, 63.9], [177.5, 72.0], [170.5, 56.8], [182.4, 74.5], [197.1, 90.9],
-                        [180.1, 93.0], [175.5, 80.9], [180.6, 72.7], [184.4, 68.0], [175.5, 70.9],
-                        [180.6, 72.5], [177.0, 72.5], [177.1, 83.4], [181.6, 75.5], [176.5, 73.0],
-                        [175.0, 70.2], [174.0, 73.4], [165.1, 70.5], [177.0, 68.9], [192.0, 102.3],
-                        [176.5, 68.4], [169.4, 65.9], [182.1, 75.7], [179.8, 84.5], [175.3, 87.7]],
-                    "markArea": {
-                        "silent": True,
-                        "itemStyle": {
-                            "color": "transparent",
-                            "borderWidth": 1,
-                            "borderType": "dashed"
-                        },
-                        "data": [
-                            [
-                                {
-                                    "name": "Male Data Range",
-                                    "xAxis": "min",
-                                    "yAxis": "min"
-                                },
-                                {
-                                    "xAxis": "max",
-                                    "yAxis": "max"
-                                }
-                            ]
-                        ]
-                    },
-                    "markPoint": {
-                        "data": [
-                            {"type": "max", "name": "Max"},
-                            {"type": "min", "name": "Min"}
-                        ]
-                    },
-                    "markLine": {
-                        "lineStyle": {
-                            "type": "solid"
-                        },
-                        "data": [{"type": "average", "name": "Average"}, {"xAxis": 170}]
-                        }
-                    }
-                ]
-            }
-
-        st_echarts(options=option, height="500px", key="unique_key7")
+        
     
     
        
