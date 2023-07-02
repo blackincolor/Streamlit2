@@ -1343,7 +1343,7 @@ def home_page():
 
         # Lese die CSV-Datei ein
         current_directory = os.getcwd()
-        csv_filename = 'oos.csv'
+        csv_filename = 'bsr.csv'
         csv_path = os.path.join(current_directory, csv_filename)
 
         data = pd.read_csv(csv_path)
