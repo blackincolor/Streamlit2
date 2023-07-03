@@ -1451,12 +1451,15 @@ def home_page():
         #Ende guter Scatterplot--------------------
 
 
-
+        current_directory = os.getcwd()
+        csv_filename = 'bsr.csv'
+        csv_path = os.path.join(current_directory, csv_filename)
+        data = pd.read_csv(csv_path)
 
         #Anfang Linien Plot Anzahl der Rezensionen im Zeitverlauf not working atm macht irgendwas falsch deswegen am ende------------------------------------------------
 
         # Lese die CSV-Datei ein
-        data = pd.read_csv(r'C:\Users\Alex\Desktop\Business\Data Science Bots\Amazon Scraping Projekt\Schreib Vortrag\bsr.csv')
+        #data = pd.read_csv(r'C:\Users\Alex\Desktop\Business\Data Science Bots\Amazon Scraping Projekt\Schreib Vortrag\bsr.csv')
 
         # Konvertiere die 'Time'-Spalte in ein datetime-Objekt
         data['Time'] = pd.to_datetime(data['Time'], format='%d.%m.%Y, %H:%M:%S')
@@ -1556,8 +1559,7 @@ def home_page():
         csv_filename = 'bsr.csv'
         csv_path = os.path.join(current_directory, csv_filename)
         data = pd.read_csv(csv_path)
-        # Lese die CSV-Datei ein
-        #data = pd.read_csv(r'C:\Users\Alex\Desktop\Business\Data Science Bots\Amazon Scraping Projekt\Schreib Vortrag\bsr.csv')
+    
 
         # Konvertiere die 'Time'-Spalte in ein datetime-Objekt
         data['Time'] = pd.to_datetime(data['Time'], format='%d.%m.%Y, %H:%M:%S')
