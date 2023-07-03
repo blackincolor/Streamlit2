@@ -70,6 +70,15 @@ def home_page():
        
     with tab1:
         
+        #Anfang Expander für Datenbank---------------------------------------------
+        expander = st.expander("Datenbank anzeigen")
+        with expander:
+            st.dataframe(df)
+        #Ende  Expander für Datenbank--------------------------------------------
+
+
+
+        
         #Anfang Balkendiagramm-----------------
         # Verarbeitung der Daten für das dritte Diagramm
         rating_counts = df['rating'].value_counts(sort=False).head(10).sort_index().astype(float)
@@ -141,11 +150,6 @@ def home_page():
         #Ende Balkendiagramm----------------------------------------------------------------
 
 
-        #Anfang Expander für Datenbank---------------------------------------------
-        expander = st.expander("Datenbank anzeigen")
-        with expander:
-            st.dataframe(df)
-        #Ende  Expander für Datenbank--------------------------------------------
 
 
         #Anfang Nutzerauswahl Kreisdiagramme
