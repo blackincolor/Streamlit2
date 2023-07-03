@@ -33,7 +33,7 @@ from collections import Counter
 import re
 
 import subprocess
-from scipy import stats
+
 from pyecharts import options as opts
 from pyecharts.charts import Boxplot
 from pyecharts import options as opts
