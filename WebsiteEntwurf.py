@@ -23,16 +23,15 @@ import matplotlib.pyplot as plt
 import time
 import random
 import datetime
-import nltk
-from nltk.corpus import stopwords
+
 from collections import Counter
 from streamlit_echarts import st_pyecharts
 import pandas as pd
-import nltk
-from nltk.corpus import stopwords
+
+
 from collections import Counter
 import re
-import spacy
+
 import subprocess
 from scipy import stats
 from pyecharts import options as opts
