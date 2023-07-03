@@ -23,10 +23,25 @@ import matplotlib.pyplot as plt
 import time
 import random
 import datetime
-from faker import Faker
-fake = Faker()
-from streamlit_echarts import st_echarts
+import nltk
+from nltk.corpus import stopwords
+from collections import Counter
+from streamlit_echarts import st_pyecharts
+import pandas as pd
+import nltk
+from nltk.corpus import stopwords
+from collections import Counter
+import re
+import spacy
+import subprocess
+from scipy import stats
+from pyecharts import options as opts
+from pyecharts.charts import Boxplot
+from pyecharts import options as opts
+from pyecharts.charts import Boxplot, Scatter
+from pyecharts.commons.utils import JsCode
 import os
+
 
 
 
@@ -35,23 +50,23 @@ def home_page():
 
     tab1, tab2, tab3 = st.tabs(["📈 Deskriptive Analyse", "💬 Text Analyse", "😃 Sentimentanalyse"])
     
-    #Datenvorbereitung
 
-    # Datenbank-Verbindung herstellen
+
 
     current_directory = os.getcwd()
 
-    database_filename = 'database.db'
+    database_filename = 'databaseV3.0.db'
 
     database_path = os.path.join(current_directory, database_filename)
 
     conn = sqlite3.connect(database_path)
 
 
-    #conn = sqlite3.connect(r'C:\Users\Alex\Desktop\Business\Data Science Bots\Amazon Scraping Projekt\Schreib Vortrag\databaseV2.0.db')
-
+    
     # Datenbank lesen
-    df = pd.read_sql_query("SELECT * from price", conn)
+    df = pd.read_sql_query("SELECT * from sentiment", conn)
+
+
 
        
     with tab1:
@@ -126,9 +141,17 @@ def home_page():
 
         #Ende Balkendiagramm----------------------------------------------------------------
 
+
+        #Anfang Expander für Datenbank---------------------------------------------
+        expander = st.expander("Datenbank anzeigen")
+        with expander:
+            st.dataframe(df)
+        #Ende  Expander für Datenbank--------------------------------------------
+
+
         #Anfang Nutzerauswahl Kreisdiagramme
         choice = st.radio(
-        "Choose a category",
+        "Was soll visualisiert werden?",
         ('Profilbild', 'Verifizierter Kauf', 'Bilder'),
         key='genre2',
         horizontal=True)
@@ -317,16 +340,15 @@ def home_page():
         #Ende  3. Kreisdiagramm Bilder Videos----------------------
 
         if choice == 'Profilbild':
-            st.write('Sie haben Komödie ausgewählt.')
+            
             st_echarts(options=option_profile_image_counts, height="500px", key="unique_key_profile_image6")
 
         
         elif choice == 'Verifizierter Kauf':
-            st.write('Sie haben Komödie2 ausgewählt.')
+            
             st_echarts(options=option_verified_purchase_counts, height="500px", key=f"unique_verified_purchase{time.time()}")
 
         else:
-            st.write('Sie haben Komödie3 ausgewählt.')
             st_echarts(options=option_image_video_counts, height="500px", key="unique_key_image_video1")
 
         #1/4 Auswahl Frage Master Boxplot---------------------------------------------
@@ -341,47 +363,64 @@ def home_page():
 
         #Ende 1/4 Auswahl Frage Master Boxplot---------------------------------------------
 
-        #Anfang Boxplot -----------------------------------------------------------------------------------
+        #Anfang Boxplot der Ratings -----------------------------------------------------------------------------------
 
-        # Ihre Datenbereinigung und Aggregation hier:
-        mean_rating = df['rating'].mean()
-        median_rating = df['rating'].median()
-        mode_rating = df['rating'].mode()[0]
-
-        # Interaktiver Boxplot für Ratings mit 0-100% Whiskers (entspricht min und max Wert)
         fig1 = go.Figure()
-        fig1.add_trace(go.Box(x=df['rating'], quartilemethod="inclusive", name=""))
-
-        # Arithmetisches Mittel, Median und Modus hinzufügen
-        fig1.add_trace(go.Scatter(x=[mean_rating, median_rating, mode_rating], y=[0.5, 0.5, 0.5], mode='markers',
-                                marker_symbol=['diamond', 'square', 'triangle-up'], marker_color=['red', 'green', 'blue'], 
-                                marker_size=[12, 12, 12], name="", hovertemplate=[
-                                    f"Arithmetisches Mittel: {mean_rating}",
-                                    f"Median: {median_rating}",
-                                    f"Modus: {mode_rating}",
-                                ]))
+        fig1.add_trace(go.Box(x=df['rating'], quartilemethod="inclusive", name="", boxpoints='outliers', whiskerwidth=1.0))
 
         # Achsenbeschriftungen, Titel und Layout anpassen
         fig1.update_layout(
             title="Boxplot der Ratings",
             xaxis_title="Rating",
+            xaxis_range=[1,5],  # Ändern Sie den Bereich auf 1-5
             yaxis=dict(showticklabels=False, showgrid=False), # Keine Y-Achsenbeschriftung und kein Gitter
             showlegend=False, # Legende ausblenden
             hovermode="closest" # Hover nur über nächstem Punkt anzeigen
-        )    
+        )
+        #st.plotly_chart(fig1)
 
         #Ende Boxplot1 Ratings ------------------------------------------------------------
-
         
-        
-        #Anfang Boxplot2 Rezensionslänge ------------------------------------------------------------
 
-        #Ende Boxplot2 Rezensionslänge ------------------------------------------------------------
+        review_length = df['review_text'].str.len()
 
+        # Interaktiver Boxplot für Rezensionslänge mit 0-100% Whiskers (entspricht min und max Wert)
+        fig2 = go.Figure()
+        fig2.add_trace(go.Box(x=review_length, quartilemethod="inclusive", name="", boxpoints='outliers', whiskerwidth=1.0))
 
+        # Achsenbeschriftungen, Titel und Layout anpassen
+        fig2.update_layout(
+            title="Boxplot der Rezensionslängen",
+            xaxis_title="Rezensionslänge",
+            xaxis_range=[0,1000],
+            yaxis=dict(showticklabels=False, showgrid=False), # Keine Y-Achsenbeschriftung und kein Gitter
+            showlegend=False, # Legende ausblenden
+            hovermode="closest" # Hover nur über nächstem Punkt anzeigen
+        )
+        #st.plotly_chart(fig2)
 
 
         #Anfang Boxplot3 Nützlich Stimmen ----------------------
+
+        helpful_votes = df['helpful_votes']
+
+        # Interaktiver Boxplot für Nützliche Stimmen mit 0-100% Whiskers (entspricht min und max Wert)
+        fig3 = go.Figure()
+        fig3.add_trace(go.Box(x=helpful_votes, quartilemethod="inclusive", name="", boxpoints='outliers', whiskerwidth=1.0))
+
+        # Achsenbeschriftungen, Titel und Layout anpassen
+        fig3.update_layout(
+            title="Boxplot der nützlichen Stimmen",
+            xaxis_title="Nützliche Stimmen",
+            xaxis_range=[0,15], # Begrenzt die X-Achse auf 1000
+            yaxis=dict(showticklabels=False, showgrid=False), # Keine Y-Achsenbeschriftung und kein Gitter
+            showlegend=False, # Legende ausblenden
+            hovermode="closest" # Hover nur über nächstem Punkt anzeigen
+        )
+        #st.plotly_chart(fig3)
+
+
+
 
         #Ende Boxplot3 Nützlich Stimmen ------------------------------------------------------------
 
@@ -389,15 +428,11 @@ def home_page():
         #Anfang Master Auswahlmenü------------------------------------------------------------
 
         if visualisation == 'Rating':
-            # Diagramm anzeigen
             st.plotly_chart(fig1)
-            st.write('Sie haben Rating ausgewählt.')
         elif visualisation == 'Rezensionslänge':
-
-            st.write('Sie haben Rezensionslänge ausgewählt.')
+            st.plotly_chart(fig2)
         else:
-
-            st.write('Sie haben Nützlich-Stimmen ausgewählt.')
+            st.plotly_chart(fig3)
         #Ende Master Auswahlmenü------------------------------------------------------------
 
 
@@ -407,7 +442,7 @@ def home_page():
         
         if visualisation != 'Rating':
             visualisation2 = st.radio(
-                "Was soll visualisiert werden? 2",
+                "Was soll visualisiert werden?",
                 ('Rezensionslänge', 'Nützlich-Stimmen'),
                 key='visualisation2',
                 index=('Rezensionslänge', 'Nützlich-Stimmen').index(visualisation) if visualisation in ('Rezensionslänge', 'Nützlich-Stimmen') else 0,
@@ -436,6 +471,14 @@ def home_page():
             
 
             review_length_option = {
+                    "title": {  # Titel hinzufügen
+                        "text": 'Histogramm der Rezensionslängen',
+                        "left": 'center',
+                        "top": '5%',  # Setze die Position des Titels nach oben
+                        "textStyle": {  # Setze die Farbe des Titels auf Weiß
+                            "color": 'white'
+        }
+                    },
                 # Optionen bleiben unverändert
                 "tooltip": {
                     "trigger": 'axis',
@@ -533,6 +576,14 @@ def home_page():
             votes_hist, _ = np.histogram(helpful_votes, bins=votes_bins)
 
             helpful_votes_option = {
+                                    "title": {  # Titel hinzufügen
+                        "text": 'Histogramm der Nützlich-Stimmen',
+                        "left": 'center',
+                        "top": '5%',  # Setze die Position des Titels nach oben
+                        "textStyle": {  # Setze die Farbe des Titels auf Weiß
+                            "color": 'white'
+        }
+                    },
                 "tooltip": {
                     "trigger": 'axis',
                     "axisPointer": {
@@ -619,12 +670,8 @@ def home_page():
 
 
             if visualisation2 == 'Rezensionslänge':
-                st.write('Sie haben Rezensionslänge ausgewählt.')
-                
-                # Diagramm für Review-Länge anzeigen
                 st_echarts(options=review_length_option, height="600px", key="unique_key_review_length")
             else:
-                st.write('Sie haben Nützlich-Stimmen ausgewählt.')
                 st_echarts(options=helpful_votes_option, height="600px", key="unique_key_helpful_votes")
 
         #Ende Antwort Histogramm------------------------------------------------------------
@@ -632,7 +679,7 @@ def home_page():
 
         #Anfang 3/4 Auswahl Frage nach Gruppen---------------------------------------------
         visualisation3 = st.radio(
-        "Was soll visualisiert werden? 3",
+        "Was soll visualisiert werden?",
         ('Rating', 'Rezensionslänge', 'Nützlich-Stimmen'),
         key='visualisation3',
         index=('Rating', 'Rezensionslänge', 'Nützlich-Stimmen').index(visualisation) if visualisation in ('Rating', 'Rezensionslänge', 'Nützlich-Stimmen',) else 0,
@@ -682,8 +729,15 @@ def home_page():
                     "type": "shadow"
                 }
             },
+                "title": {
+                "text": "Nützlich-Stimmen nach verschiedenen Gruppen",
+                "top": 20,
+                "left": "center", 
+                 "textStyle": {"color": "white"}, 
+                 },
             "legend": {
-                "data": ["Profilbild", "Verifizierter Kauf", "Vine", "Bild oder Video"]
+                "data": ["Profilbild", "Verifizierter Kauf", "Vine", "Bild oder Video"],
+                "textStyle": {"color": "white"} 
             },
             "toolbox": {
                 "show": True,
@@ -810,6 +864,12 @@ def home_page():
                     "type": "shadow"
                 }
             },
+            "title": {
+                "text": "Rating nach verschiedenen Gruppen",
+                "top": 20,
+                "left": "center", 
+                 "textStyle": {"color": "white"}, 
+                 },
             "legend": {
                 "data": ["Profilbild", "Verifizierter Kauf", "Vine", "Bild oder Video"],
                 "textStyle": {"color": "white"}  # Legendenbeschriftungen auf Weiß setzen
@@ -940,6 +1000,12 @@ def home_page():
                     "type": "shadow"
                 }
             },
+                            "title": {
+                "text": "Rezensionslänge nach verschiedenen Gruppen",
+                "top": 20,
+                "left": "center", 
+                 "textStyle": {"color": "white"}, 
+                 },
             "legend": {
                 "data": ["Profilbild", "Verifizierter Kauf", "Vine", "Bild oder Video"],
                 "textStyle": {"color": "white"}  # Legendenbeschriftungen auf Weiß setzen
@@ -1036,16 +1102,13 @@ def home_page():
 
 
         if visualisation3 == 'Rating':
-            st.write('Sie haben Rating ausgewählt.')
             st_echarts(options=rating_option2, height="600px", key="unique_key_rating")
             
         elif visualisation3 == 'Rezensionslänge':
-            st.write('Sie haben Rezensionslänge ausgewählt.')
             st_echarts(options=review_length_option2, height="600px", key="unique_key_review_length2")
             
         else:
-            st.write('Sie haben Nützlich-Stimmen ausgewählt.')
-            st_echarts(options=helpful_votes_option2, height="600px", key="unique_key_helpful_votes2")
+           st_echarts(options=helpful_votes_option2, height="600px", key="unique_key_helpful_votes2")
         # Ende Nutzerauswahl erhalten-----------------------------------------------------------------------
 
 
@@ -1054,7 +1117,7 @@ def home_page():
 
         if visualisation != 'Rating':
             visualisation4 = st.radio(
-                "Was soll visualisiert werden? 4",
+                "Was soll visualisiert werden?",
                 ('Rezensionslänge', 'Nützlich-Stimmen'),
                 key='visualisation4',
                 index=('Rezensionslänge', 'Nützlich-Stimmen').index(visualisation) if visualisation in ('Rezensionslänge', 'Nützlich-Stimmen') else 0,
@@ -1160,6 +1223,14 @@ def home_page():
                 "type": 'shadow'
                 }
             },
+                        "title": {
+                "text": 'Durchschnittliche Nützlich Stimmen nach Rating',
+                "left": 'center',
+                "top": 20,
+                "textStyle": {
+                "color": '#fff'
+                }
+            },
             "grid": {
                 "left": '3%',
                 "right": '4%',
@@ -1206,10 +1277,8 @@ def home_page():
             # Ende Balekndiagramm Nützlich Stimmen-----------------------------------------------------------------------
 
             if visualisation4 == 'Rezensionslänge':
-                st.write('Sie haben Rezensionslänge ausgewählt.')
                 st_echarts(options=option, height="600px", key="unique_key_rating71")
             else:
-                st.write('Sie haben Nützlich-Stimmen ausgewählt.')
                 st_echarts(options=option2, height="600px", key="unique_key_helpful_votes4")
 
 
@@ -1221,7 +1290,7 @@ def home_page():
 
 
 
-
+        #components.html("<hr>")
 
 
         
@@ -1243,6 +1312,16 @@ def home_page():
         data_verified = df_verified[['id', 'date_created_str']].values.tolist()
         data_unverified = df_unverified[['id', 'date_created_str']].values.tolist()
 
+        df['review_text_length'] = df['review_text'].apply(len)
+        df_long_text = df[df['review_text_length'] > 100]
+
+        data_long_text = df_long_text[['id', 'date_created_str']].values.tolist()
+
+        df_long_text = df[df['review_text_length'] > 500]
+        data_long_long_text = df_long_text[['id', 'date_created_str']].values.tolist()
+
+        df_low_ratings = df[df['rating'] <= 3]
+        data_low_ratings = df_low_ratings[['id', 'date_created_str']].values.tolist()
 
      
 
@@ -1254,9 +1333,16 @@ def home_page():
                 }
             },
             "legend": {
-                "data": ['Verifiziert', 'Nicht verifiziert'],
+                "data": ['Verifiziert', 'Nicht verifiziert', 'Textlänge über 100 Zeichen','Textlänge über 500 Zeichen','3 Sterne Rating oder schlechter'],
                 "left": 'center',
-                "bottom": 10
+                "bottom": -8,
+                "textStyle": {"color": "white"}, 
+                    "selected": {
+                        'Verifiziert': True,
+                        'Nicht verifiziert': True,
+                        'Textlänge über 100 Zeichen': False,
+                        'Textlänge über 500 Zeichen': False,
+                        '3 Sterne Rating oder schlechter': False}
             },
 
             "grid": {
@@ -1328,6 +1414,35 @@ def home_page():
                     },
                     "data": data_unverified,
                     # Optional, Sie können markArea, markPoint und markLine auskommentieren, wenn Sie diese nicht benötigen
+                },
+                {
+                    "name": "Textlänge über 100 Zeichen",
+                    "type": "scatter",
+                    "emphasis": {
+                        "focus": "series"
+                    },
+                    "data": data_long_text,
+                    # Optional, Sie können markArea, markPoint und markLine auskommentieren, wenn Sie diese nicht benötigen
+                },
+                {
+                    "name": "Textlänge über 500 Zeichen",
+                    "type": "scatter",
+                    "emphasis": {
+                        "focus": "series"
+                    },
+                    "data": data_long_long_text,
+                    # Optional, Sie können markArea, markPoint und markLine auskommentieren, wenn Sie diese nicht benötigen
+                },
+                {
+                    "name": "3 Sterne Rating oder schlechter",
+                    "type": "scatter",
+                    "emphasis": {
+                        "focus": "series"
+                    },
+                    "data": data_low_ratings,
+                    "itemStyle": {
+                        "color": "purple"},
+                    # Optional, Sie können markArea, markPoint und markLine auskommentieren, wenn Sie diese nicht benötigen
                 }
             ]
         }
@@ -1342,14 +1457,7 @@ def home_page():
         #Anfang Linien Plot Anzahl der Rezensionen im Zeitverlauf not working atm macht irgendwas falsch deswegen am ende------------------------------------------------
 
         # Lese die CSV-Datei ein
-        current_directory = os.getcwd()
-        csv_filename = 'bsr.csv'
-        csv_path = os.path.join(current_directory, csv_filename)
-
-        data = pd.read_csv(csv_path)
-
-
-        #data = pd.read_csv(r'C:\Users\Alex\Desktop\Business\Data Science Bots\Amazon Scraping Projekt\Schreib Vortrag\bsr.csv')
+        data = pd.read_csv(r'C:\Users\Alex\Desktop\Business\Data Science Bots\Amazon Scraping Projekt\Schreib Vortrag\bsr.csv')
 
         # Konvertiere die 'Time'-Spalte in ein datetime-Objekt
         data['Time'] = pd.to_datetime(data['Time'], format='%d.%m.%Y, %H:%M:%S')
@@ -1436,22 +1544,368 @@ def home_page():
         st_echarts(options=option, height="600px", key="unique_key4")
 
 
-        #Ende Linien Plot Anzahl der Rezensionen im Zeitverlauf not working atm------------------------------------------------
+        #Ende Linien Plot Anzahl der Rezensionen im Zeitverlauf------------------------------------------------
         
     
+
+    #Anfang Linien Plot Rating im Zeitverlauf------------------------------------------------
+    
+        # Vorbereiten der Daten
+
+
+        current_directory = os.getcwd()
+        csv_filename = 'bsr.csv'
+        csv_path = os.path.join(current_directory, csv_filename)
+        data = pd.read_csv(csv_path)
+        # Lese die CSV-Datei ein
+        #data = pd.read_csv(r'C:\Users\Alex\Desktop\Business\Data Science Bots\Amazon Scraping Projekt\Schreib Vortrag\bsr.csv')
+
+        # Konvertiere die 'Time'-Spalte in ein datetime-Objekt
+        data['Time'] = pd.to_datetime(data['Time'], format='%d.%m.%Y, %H:%M:%S')
+
+        # Ersetze die leeren Zellen in der 'Sales Rank'-Spalte mit NaN
+        data['Sales Rank'] = pd.to_numeric(data['Sales Rank'], errors='coerce')
+
+        # Setze den Index auf die 'Time'-Spalte
+        data.set_index('Time', inplace=True)
+
+        # Berechne die Zeiträume, in denen der Bestsellerrang über 1000 war
+        data['unavailable'] = data['Sales Rank'] > 1500
+        unavailability_periods = []
+        start = None
+        for i in range(len(data)):
+            if data['unavailable'].iloc[i] and start is None:
+                start = data.index[i]
+            elif not data['unavailable'].iloc[i] and start is not None:
+                end = data.index[i]
+                unavailability_periods.append((start, end))
+                start = None
+        if start is not None:  # Falls die PS5 am Ende des Datensatzes immer noch nicht verfügbar ist
+            unavailability_periods.append((start, data.index[-1]))
+
+        # Durchschnittliche Bewertung pro Tag
+        daily_avg_rating = df['rating'].resample('D').mean()
+
+        # Berechnen des gleitenden Durchschnitts mit einem Zeitfenster von 14 Tagen
+        rolling_avg_rating = daily_avg_rating.rolling(window=14).mean()
+
+        # Entfernen der NaN-Werte
+        rolling_avg_rating = rolling_avg_rating.dropna()
+
+        x_data = rolling_avg_rating.index.strftime('%Y-%m-%d').tolist()  # Konvertieren der Datumsdaten in Strings für die x-Achse
+        y_data = rolling_avg_rating.tolist()
+
+        # Erstellen Sie die markArea-Daten basierend auf den Nichtverfügbarkeitszeiträumen
+        mark_areas = [
+            [{"xAxis": str(start.strftime('%Y-%m-%d'))}, {"xAxis": str(end.strftime('%Y-%m-%d'))}]
+            for start, end in unavailability_periods
+        ]
+
+
+        option = {
+            "title": {
+                "text": 'Durchschnittsbewertung im zeitlichen Verlauf',
+                "textStyle": {"color": '#fff'}
+            },
+            "tooltip": {
+                "trigger": 'axis',
+                "axisPointer": {"type": 'cross'}
+            },
+            "toolbox": {
+                "show": True,
+                "feature": {"saveAsImage": {}}
+            },
+            "xAxis": {
+                "type": 'category',
+                "boundaryGap": False,
+                "data": x_data,
+                "axisLine": {"lineStyle": {"color": '#fff'}},
+                "axisLabel": {"color": '#fff'}
+            },
+            "yAxis": {
+                "type": 'value',
+                "min": 2.5,  # Minimum auf 3 setzen
+                "max": 5, 
+                "axisLabel": {
+                    "formatter": '{value}',
+                    "color": '#fff'
+                },
+                "axisLine": {"lineStyle": {"color": '#fff'}},
+                "axisPointer": {"snap": True},
+                "splitLine": {"lineStyle": {"color": '#aaa'}}
+            },
+            "series": [
+                {
+                    "name": 'Durchschnittsbewertung',
+                    "type": 'line',
+                    "smooth": True,
+                    "data": y_data,
+                    "markArea": {
+                        "itemStyle": {"color": 'rgba(255, 0, 0, 0.4)'},
+                        "data": mark_areas
+                    }
+                }
+            ]
+        }
+
+        st_echarts(options=option, height="600px", width="100%", key="unique_key44")
+        
+
+
+
+
+    #Ende Linien Plot Rating im Zeitverlauf------------------------------------------------
     
        
 
     with tab2:
-        st.write("Tab 2")
+        st.write("Text Analyse")
+        
+
 
 
 
     with tab3:
-        st.write("Tab3")
+        
+
+        # Verarbeitung der Daten für das Balkendiagramm
+        data_grouped = df.groupby('rating')['sentiment_score1'].mean().sort_index().round(2)
+
+        # Umwandlung des Series-Objekts in eine Liste
+        data_values = data_grouped.values.tolist()
+
+        # Umwandlung des Index (Rating) in eine Liste
+        rating_values = [float(x) for x in data_grouped.index.tolist()]
+
+        option = {
+            "title": {
+                "text": 'Sentiment Score von Google API nach Amazon-Sternebewertung',
+                "left": 'center',
+                "top": 20,
+                "textStyle": {
+                    "color": '#fff'
+                }
+            },
+            "tooltip": {
+                "trigger": 'axis',
+                "axisPointer": {
+                    "type": 'shadow'
+                }
+            },
+            "grid": {
+                "left": '3%',
+                "right": '4%',
+                "bottom": '3%',
+                "containLabel": True
+            },
+            "xAxis": {
+                "type": 'category',
+                "data": rating_values,
+                "axisTick": {
+                    "alignWithLabel": True
+                },
+                "axisLabel": {
+                    "color": '#fff'
+                }
+            },
+            "yAxis": {
+                "type": 'value',
+                "name": 'Sentiment Score1',
+                "axisLabel": {
+                    "color": '#fff'
+                }
+            },
+            "series": [
+                {
+                    "name": 'Durchschnittliche Sentiment Score1',
+                    "type": 'bar',
+                    "data": data_values,
+                    "label": {
+                        "show": True,
+                        "position": 'top',
+                        "color": '#fff'
+                    }
+                }
+            ]
+        }
+
+        st_echarts(options=option, height="600px", key="unique_key_sentiment_score")
+
+
+        # Verarbeitung der Daten für das Balkendiagramm
+        data_grouped = df.groupby('rating')['sentiment_score3'].mean().sort_index().round(2)
+
+        # Umwandlung des Series-Objekts in eine Liste
+        data_values = data_grouped.values.tolist()
+
+        # Umwandlung des Index (Rating) in eine Liste
+        rating_values = [float(x) for x in data_grouped.index.tolist()]
+
+        option = {
+            "title": {
+                "text": 'Sentiment Score von TextBlob nach Amazon-Sternebewertung',
+                "left": 'center',
+                "top": 20,
+                "textStyle": {
+                    "color": '#fff'
+                }
+            },
+            "tooltip": {
+                "trigger": 'axis',
+                "axisPointer": {
+                    "type": 'shadow'
+                }
+            },
+            "grid": {
+                "left": '3%',
+                "right": '4%',
+                "bottom": '3%',
+                "containLabel": True
+            },
+            "xAxis": {
+                "type": 'category',
+                "data": rating_values,
+                "axisTick": {
+                    "alignWithLabel": True
+                },
+                "axisLabel": {
+                    "color": '#fff'
+                }
+            },
+            "yAxis": {
+                "type": 'value',
+                "name": 'Sentiment Score1',
+                "axisLabel": {
+                    "color": '#fff'
+                }
+            },
+            "series": [
+                {
+                    "name": 'Durchschnittliche Sentiment Score1',
+                    "type": 'bar',
+                    "data": data_values,
+                    "label": {
+                        "show": True,
+                        "position": 'top',
+                        "color": '#fff'
+                    }
+                }
+            ]
+        }
+
+        st_echarts(options=option, height="600px", key="unique_key_sentiment_score2")
+
+
+            #Anfang Linien Plot Rating im Zeitverlauf------------------------------------------------
+    
+        # Vorbereiten der Daten
+        # Lese die CSV-Datei ein
+
+        current_directory = os.getcwd()
+        csv_filename = 'bsr.csv'
+        csv_path = os.path.join(current_directory, csv_filename)
+        data = pd.read_csv(csv_path)
+
+        
+
+        # Konvertiere die 'Time'-Spalte in ein datetime-Objekt
+        data['Time'] = pd.to_datetime(data['Time'], format='%d.%m.%Y, %H:%M:%S')
+
+        # Ersetze die leeren Zellen in der 'Sales Rank'-Spalte mit NaN
+        data['Sales Rank'] = pd.to_numeric(data['Sales Rank'], errors='coerce')
+
+        # Setze den Index auf die 'Time'-Spalte
+        data.set_index('Time', inplace=True)
+
+        # Berechne die Zeiträume, in denen der Bestsellerrang über 1000 war
+        data['unavailable'] = data['Sales Rank'] > 1500
+        unavailability_periods = []
+        start = None
+        for i in range(len(data)):
+            if data['unavailable'].iloc[i] and start is None:
+                start = data.index[i]
+            elif not data['unavailable'].iloc[i] and start is not None:
+                end = data.index[i]
+                unavailability_periods.append((start, end))
+                start = None
+        if start is not None:  # Falls die PS5 am Ende des Datensatzes immer noch nicht verfügbar ist
+            unavailability_periods.append((start, data.index[-1]))
+
+        # Durchschnittliche Bewertung pro Tag
+        daily_avg_sentiment_score3 = df['sentiment_score3'].resample('D').mean()
+
+        # Berechnen des gleitenden Durchschnitts mit einem Zeitfenster von 14 Tagen
+        rolling_avg_sentiment_score3 = daily_avg_sentiment_score3.rolling(window=14).mean()
+
+        # Entfernen der NaN-Werte
+        rolling_avg_sentiment_score3 = rolling_avg_sentiment_score3.dropna()
+
+        x_data = rolling_avg_sentiment_score3.index.strftime('%Y-%m-%d').tolist()  # Konvertieren der Datumsdaten in Strings für die x-Achse
+        y_data = rolling_avg_sentiment_score3.tolist()
+
+        # Erstellen Sie die markArea-Daten basierend auf den Nichtverfügbarkeitszeiträumen
+        mark_areas = [
+            [{"xAxis": str(start.strftime('%Y-%m-%d'))}, {"xAxis": str(end.strftime('%Y-%m-%d'))}]
+            for start, end in unavailability_periods
+        ]
+
+
+        option = {
+            "title": {
+                "text": 'Durchschnittsbewertung im zeitlichen Verlauf',
+                "textStyle": {"color": '#fff'}
+            },
+            "tooltip": {
+                "trigger": 'axis',
+                "axisPointer": {"type": 'cross'}
+            },
+            "toolbox": {
+                "show": True,
+                "feature": {"saveAsImage": {}}
+            },
+            "xAxis": {
+                "type": 'category',
+                "boundaryGap": False,
+                "data": x_data,
+                "axisLine": {"lineStyle": {"color": '#fff'}},
+                "axisLabel": {"color": '#fff'}
+            },
+            "yAxis": {
+                "type": 'value',
+                "min": 2.5,  # Minimum auf 3 setzen
+                "max": 5, 
+                "axisLabel": {
+                    "formatter": '{value}',
+                    "color": '#fff'
+                },
+                "axisLine": {"lineStyle": {"color": '#fff'}},
+                "axisPointer": {"snap": True},
+                "splitLine": {"lineStyle": {"color": '#aaa'}}
+            },
+            "series": [
+                {
+                    "name": 'Durchschnittsbewertung',
+                    "type": 'line',
+                    "smooth": True,
+                    "data": y_data,
+                    "markArea": {
+                        "itemStyle": {"color": 'rgba(255, 0, 0, 0.4)'},
+                        "data": mark_areas
+                    }
+                }
+            ]
+        }
+
+        st_echarts(options=option, height="600px", width="100%", key="unique_key46")
+        
 
 
 
+
+    #Ende Linien Plot Rating im Zeitverlauf------------------------------------------------
+
+
+        
 
 
 
@@ -1468,7 +1922,9 @@ def home_page():
 
 
 def about_page():
-    st.write("This is the about page")
+    st.write("Vergleichsseite")
+
+    
 
 
 
@@ -1483,11 +1939,36 @@ def about_page():
 
 
 def contact_page():
-    st.write("This is the contact page")
+    st.write("Scraping")
 
 
 
+    asin = st.text_input('Enter ASIN of the product')
 
+    if asin:
+            # Erstellen Sie einen "unendlichen" Fortschrittsbalken und einen Platzhalter für die Statusmeldungen
+            progress_bar = st.progress(0)
+            status_text = st.empty()
+
+            # Starten Sie den Prozess mit Popen
+            process = subprocess.Popen(['python', 'Amazon-Scraper.py', asin], stdout=subprocess.PIPE)
+
+            # Verarbeiten Sie die Ausgabe in Echtzeit
+            total_lines_processed = 0
+            for line in iter(process.stdout.readline, b''):
+                line = line.decode(errors='ignore')
+
+
+                # Aktualisieren Sie den Fortschrittsbalken und den Status-Text basierend auf der Ausgabe
+                if "Seite erfolgreich gescraped" in line:
+                    total_lines_processed += 1
+                    progress = total_lines_processed / 300  # Hier 300 durch die tatsächliche maximale Anzahl von Seiten ersetzen, die Sie erwarten zu scrapen
+                    progress_bar.progress(progress)
+                    status_text.text(f'Fetched data for page: {line.split()[-3]}')  # Hier split(-3) verwenden, um die Seitennummer aus Ihrer Ausgabe zu extrahieren
+
+                    process.communicate()
+
+            st.write(f'Finished fetching data for ASIN: {asin}')
 
 
 
@@ -1519,8 +2000,18 @@ def main():
 
 
 
+    html_string='''
+    <script>
+    // To break out of iframe and access the parent window
+    const streamlitDoc = window.parent.document;
 
-
+    // Make the replacement
+    document.addEventListener("DOMContentLoaded", function(event){
+            streamlitDoc.getElementsByTagName("footer")[0].innerHTML = 'Made with <a href="https://streamlit.io" target="_blank" style="text-decoration: none; color: white;">Streamlit</a> provided by Aenny, Cornelius, Tim and Alex';
+        });
+    </script>
+    '''
+    components.html(html_string)
 
 
 
